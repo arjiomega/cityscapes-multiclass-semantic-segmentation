@@ -1,0 +1,11 @@
+
+
+matplotlib==3.8.4
+scikit-image==0.23.1
+opencv-python==4.9.0.80
+
+
+pydantic==2.7.0
+
+# local run
+notebook==7.1.2

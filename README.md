@@ -4,3 +4,12 @@ The AI Driving Assistant project aims to develop an intelligent system capable o
 
 ## Data
 https://www.cityscapes-dataset.com
+
+### Data Format
+{city} _ {seq:0>6} _ {frame:0>6} _ {type}{ext}
+
+- **type** the type/modality of data, e.g. gtFine for fine ground truth, or leftImg8bit for left 8-bit images.
+- **city** the city in which this part of the dataset was recorded.
+- **seq** the sequence number using 6 digits.
+- **frame** the frame number using 6 digits. Note that in some cities very few, albeit very long sequences were recorded, while in some cities - many short sequences were recorded, of which only the 19th frame is annotated.
+- **ext** the extension of the file and optionally a suffix, e.g. _polygons.json for ground truth files
