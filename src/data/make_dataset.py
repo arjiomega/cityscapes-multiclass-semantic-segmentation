@@ -2,7 +2,11 @@ import os
 import shutil
 from pathlib import Path
 
+from PIL import Image
+
 from config import config
+from src.data.load_data import Data
+from src.data.update_mask import update_mask
 
 def _extract_data_name(filename: str) -> str:
     str2list = filename.split("_")[:3]
@@ -55,4 +59,11 @@ if __name__ == "__main__":
                 mask_destination_path.mkdir(parents=True, exist_ok=True)
                 
                 shutil.copy(img_source_path,img_destination_path)
-                shutil.copy(mask_source_path,mask_destination_path)
+                
+                filename_split = filename.split("_")
+                data = Data(*filename_split, dataset)
+                mask = data.load_array("mask")
+                updated_mask = update_mask(mask)
+                
+                mask_as_image = Image.fromarray(updated_mask)
+                mask_as_image.save(Path(mask_destination_path, mask_filename))
