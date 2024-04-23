@@ -20,19 +20,31 @@ Attributes:
     MASK_TYPE (str): The type of the raw segmentation masks.
     MASK_FORMAT (str): The format of the raw segmentation masks.
 """
+
 from pathlib import Path
 
-PROJECT_DIR = "."
+CONFIG_DIR = Path(__file__).parent.resolve()
+PROJECT_DIR = CONFIG_DIR.parent
 DATA_DIR = Path(PROJECT_DIR, "data")
 
 RAW_DATA_DIR = Path(DATA_DIR, "raw")
 PROCESSED_DATA_DIR = Path(DATA_DIR, "processed")
 
 RAW_IMG_DIR = Path(RAW_DATA_DIR, "leftImg8bit_trainvaltest", "leftImg8bit")
-PROCESSED_IMG_DIR = Path(PROCESSED_DATA_DIR, "images")
-
 RAW_MASK_DIR = Path(RAW_DATA_DIR, "gtFine_trainvaltest", "gtFine")
-PROCESSED_MASK_DIR = Path(PROCESSED_DATA_DIR, "masks")
+
+TRAIN_DIR = Path(PROCESSED_DATA_DIR, "train")
+VALID_DIR = Path(PROCESSED_DATA_DIR, "valid")
+TEST_DIR = Path(PROCESSED_DATA_DIR, "test")
+
+TRAIN_IMG_DIR = Path(TRAIN_DIR, "images")
+TRAIN_MASK_DIR = Path(TRAIN_DIR, "masks")
+
+VALID_IMG_DIR = Path(VALID_DIR, "images")
+VALID_MASK_DIR = Path(VALID_DIR, "masks")
+
+TEST_IMG_DIR = Path(TEST_DIR, "images")
+TEST_MASK_DIR = Path(TEST_DIR, "masks")
 
 IMG_TYPE = "leftImg8bit"
 IMG_FORMAT = ".png"
