@@ -3,9 +3,15 @@
 matplotlib==3.8.4
 scikit-image==0.23.1
 opencv-python==4.9.0.80
-
+torch==2.2.2
 
 pydantic==2.7.0
+
+tqdm = 4.66.2
+
+# development
+pytest==8.1.1
+black==24.4.0
 
 # local run
 notebook==7.1.2

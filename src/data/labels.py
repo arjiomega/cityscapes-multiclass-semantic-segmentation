@@ -35,23 +35,24 @@ class_dict = {
     "train": 31,
     "motorcycle": 32,
     "bicycle": 33,
-    "license plate": -1
+    "license plate": -1,
 }
 
 vehicles = [
-    "car", 
-    "truck", 
-    "bus", 
-    "caravan", 
-    "trailer", 
-    "train", 
+    "car",
+    "truck",
+    "bus",
+    "caravan",
+    "trailer",
+    "train",
     "motorcycle",
-    "bicycle"
+    "bicycle",
 ]
 human = ["person", "rider"]
 other_classes = ["sky", "traffic light", "traffic sign", "road", "sidewalk"]
 
-excluded_classes = [class_name 
-    for class_name in class_dict 
+excluded_classes = [
+    class_name
+    for class_name in class_dict
     if class_name not in [*other_classes, *human, *vehicles]
 ]
