@@ -3,7 +3,7 @@ from pathlib import Path
 import cv2
 
 from config import config
-
+from src.data.labels import updated_class_dict
 
 class Data:
     def __init__(self, city, seq, frame, dataset) -> None:
@@ -35,6 +35,14 @@ class Data:
                     )
             case _:
                 raise ValueError(f"Invalid type: {type}. Must be either image or mask.")
+
+    def get_classes(self):
+        mask_array = self.load_array("mask")
+
+        return { 
+            class_idx: updated_class_dict[class_idx]
+            for class_idx in set(mask_array.flatten())
+        }
 
     def load_array(self, type: str, load_raw: bool = False):
         match type:

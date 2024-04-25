@@ -56,3 +56,14 @@ excluded_classes = [
     for class_name in class_dict
     if class_name not in [*other_classes, *human, *vehicles]
 ]
+
+updated_class_dict = {
+    1: "human",
+    2: "vehicle",
+    3: "sky",
+    4: "traffic light",
+    5: "traffic sign",
+    6: "road",
+    7: "sidewalk",
+    0: "unlabeled"
+}
