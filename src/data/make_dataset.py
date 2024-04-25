@@ -9,14 +9,9 @@ from tqdm import tqdm
 from config import config
 from src.data.dataloader import Data
 from src.data.update_mask import update_mask
+from src.data.data_utils import extract_data_name
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO)
-
-
-def _extract_data_name(filename: str) -> str:
-    str2list = filename.split("_")[:3]
-    return "_".join(str2list)
-
 
 def _cities_similarity_rule(img_dataset_path: Path, mask_dataset_path: Path) -> None:
     cities_similarity_rule = os.listdir(img_dataset_path) == os.listdir(
@@ -27,10 +22,10 @@ def _cities_similarity_rule(img_dataset_path: Path, mask_dataset_path: Path) -> 
 
 def _filename_similarity_rule(img_city_path: Path, mask_city_path: Path) -> None:
     img_city_set = set(
-        [_extract_data_name(filename) for filename in os.listdir(img_city_path)]
+        [extract_data_name(filename) for filename in os.listdir(img_city_path)]
     )
     mask_city_set = set(
-        [_extract_data_name(filename) for filename in os.listdir(mask_city_path)]
+        [extract_data_name(filename) for filename in os.listdir(mask_city_path)]
     )
 
     filename_similarity_rule = img_city_set == mask_city_set
@@ -38,7 +33,7 @@ def _filename_similarity_rule(img_city_path: Path, mask_city_path: Path) -> None
 
 
 if __name__ == "__main__":
-    dataset_names = ["train", "val", "test"]
+    dataset_names = ["train", "valid", "test"]
 
     for dataset in dataset_names:
         img_dataset_path = Path(config.RAW_IMG_DIR, dataset)
@@ -55,7 +50,7 @@ if __name__ == "__main__":
 
             filenames_no_ext = set(
                 [
-                    _extract_data_name(filename)
+                    extract_data_name(filename)
                     for filename in os.listdir(mask_city_path)
                 ]
             )
