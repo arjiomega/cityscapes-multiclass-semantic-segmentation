@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms.functional as TF
 
+
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(DoubleConv, self).__init__()
@@ -17,6 +18,7 @@ class DoubleConv(nn.Module):
     def forward(self, x):
         return self.conv(x)
 
+
 class UNET(nn.Module):
     """Modified UNET based on U-Net: Convolutional Networks for Biomedical Image Segmentation [1].
     On the vanilla unet, batchnorm2d was not included since the idea was released on the same
@@ -26,8 +28,12 @@ class UNET(nn.Module):
     [2] https://arxiv.org/abs/1502.03167
     [3] https://www.reddit.com/r/MachineLearning/comments/fd9whj/d_why_batchnorm_in_unet/
     """
+
     def __init__(
-            self, in_channels=3, out_channels=1, features=[64, 128, 256, 512],
+        self,
+        in_channels=3,
+        out_channels=1,
+        features=[64, 128, 256, 512],
     ):
         super(UNET, self).__init__()
         self.ups = nn.ModuleList()
@@ -43,12 +49,15 @@ class UNET(nn.Module):
         for feature in reversed(features):
             self.ups.append(
                 nn.ConvTranspose2d(
-                    feature*2, feature, kernel_size=2, stride=2,
+                    feature * 2,
+                    feature,
+                    kernel_size=2,
+                    stride=2,
                 )
             )
-            self.ups.append(DoubleConv(feature*2, feature))
+            self.ups.append(DoubleConv(feature * 2, feature))
 
-        self.bottleneck = DoubleConv(features[-1], features[-1]*2)
+        self.bottleneck = DoubleConv(features[-1], features[-1] * 2)
         self.final_conv = nn.Conv2d(features[0], out_channels, kernel_size=1)
 
     def forward(self, x):
@@ -64,15 +73,16 @@ class UNET(nn.Module):
 
         for idx in range(0, len(self.ups), 2):
             x = self.ups[idx](x)
-            skip_connection = skip_connections[idx//2]
+            skip_connection = skip_connections[idx // 2]
 
             if x.shape != skip_connection.shape:
                 x = TF.resize(x, size=skip_connection.shape[2:])
 
             concat_skip = torch.cat((skip_connection, x), dim=1)
-            x = self.ups[idx+1](concat_skip)
+            x = self.ups[idx + 1](concat_skip)
 
         return self.final_conv(x)
+
 
 def test():
     x = torch.randn((1, 3, 572, 572))
@@ -82,6 +92,7 @@ def test():
     print(preds.shape)
 
     # assert preds.shape == x.shape
+
 
 if __name__ == "__main__":
     test()

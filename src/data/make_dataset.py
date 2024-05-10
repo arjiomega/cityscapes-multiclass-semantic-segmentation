@@ -13,6 +13,7 @@ from src.data.data_utils import extract_data_name
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO)
 
+
 def _cities_similarity_rule(img_dataset_path: Path, mask_dataset_path: Path) -> None:
     cities_similarity_rule = os.listdir(img_dataset_path) == os.listdir(
         mask_dataset_path
@@ -49,10 +50,7 @@ if __name__ == "__main__":
             _filename_similarity_rule(img_city_path, mask_city_path)
 
             filenames_no_ext = set(
-                [
-                    extract_data_name(filename)
-                    for filename in os.listdir(mask_city_path)
-                ]
+                [extract_data_name(filename) for filename in os.listdir(mask_city_path)]
             )
 
             logging.info(f"Loading {dataset} dataset for city {city}")

@@ -5,6 +5,7 @@ import cv2
 from config import config
 from src.data.labels import updated_class_dict
 
+
 class Data:
     def __init__(self, city, seq, frame, dataset) -> None:
         self.city = city
@@ -39,7 +40,7 @@ class Data:
     def get_classes(self):
         mask_array = self.load_array("mask")
 
-        return { 
+        return {
             class_idx: updated_class_dict[class_idx]
             for class_idx in set(mask_array.flatten())
         }

@@ -65,5 +65,5 @@ updated_class_dict = {
     5: "traffic sign",
     6: "road",
     7: "sidewalk",
-    0: "unlabeled"
+    0: "unlabeled",
 }

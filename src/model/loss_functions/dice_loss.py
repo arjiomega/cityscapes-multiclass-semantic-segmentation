@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class DiceLoss(nn.Module):
     """Custom Dice Loss for PyTorch
 
@@ -20,21 +21,26 @@ class DiceLoss(nn.Module):
     Returns:
         torch.float32: Dice Loss. Shape (1,)
     """
+
     def __init__(self):
         super(DiceLoss, self).__init__()
         self.smooth = 1e-5
 
     def forward(self, predict: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        predict = torch.softmax(predict, dim=1) # (batch_size, channel, height, width)
+        predict = torch.softmax(predict, dim=1)  # (batch_size, channel, height, width)
         target = target.type(torch.float32)
 
         # 2*p*t
-        intersection = torch.sum(predict * target, dim=(2,3)) # (batch_size, channel)
+        intersection = torch.sum(predict * target, dim=(2, 3))  # (batch_size, channel)
         # p^2 + t^2
-        union = torch.sum(predict.pow(2), dim=(2,3)) + torch.sum(target.pow(2), dim=(2,3)) # (batch_size, channel)
+        union = torch.sum(predict.pow(2), dim=(2, 3)) + torch.sum(
+            target.pow(2), dim=(2, 3)
+        )  # (batch_size, channel)
 
         # 2*p*t / (p^2 + t^2)
-        dice_coef = (2 * intersection + self.smooth) / (union + self.smooth) # (batch_size, channel)
+        dice_coef = (2 * intersection + self.smooth) / (
+            union + self.smooth
+        )  # (batch_size, channel)
 
         dice_loss = 1 - torch.mean(dice_coef)  # (1,)
 
