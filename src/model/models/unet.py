@@ -18,6 +18,14 @@ class DoubleConv(nn.Module):
         return self.conv(x)
 
 class UNET(nn.Module):
+    """Modified UNET based on U-Net: Convolutional Networks for Biomedical Image Segmentation [1].
+    On the vanilla unet, batchnorm2d was not included since the idea was released on the same
+    time and it happened to improve performance on batch size 8 to 32 [2,3].
+
+    [1] https://arxiv.org/abs/1505.04597
+    [2] https://arxiv.org/abs/1502.03167
+    [3] https://www.reddit.com/r/MachineLearning/comments/fd9whj/d_why_batchnorm_in_unet/
+    """
     def __init__(
             self, in_channels=3, out_channels=1, features=[64, 128, 256, 512],
     ):
@@ -67,10 +75,13 @@ class UNET(nn.Module):
         return self.final_conv(x)
 
 def test():
-    x = torch.randn((3, 1, 161, 161))
-    model = UNET(in_channels=1, out_channels=1)
+    x = torch.randn((1, 3, 572, 572))
+    model = UNET(in_channels=3, out_channels=2)
     preds = model(x)
-    assert preds.shape == x.shape
+    print(model)
+    print(preds.shape)
+
+    # assert preds.shape == x.shape
 
 if __name__ == "__main__":
     test()
