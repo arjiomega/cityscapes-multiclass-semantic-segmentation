@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from config import config
-from src.data.dataloader import Data
+from src.data.load_dataset import Data
 
 CITY = "aachen"
 SEQ = "000000"

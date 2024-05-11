@@ -7,7 +7,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from config import config
-from src.data.dataloader import Data
+from src.data.load_dataset import Data
 from src.data.update_mask import update_mask
 from src.data.data_utils import extract_data_name
 
