@@ -1,20 +1,27 @@
+import json
+from typing import Callable
+
 import torch
 import torch.utils
-import torch.utils.data
 from tqdm import tqdm
+import torch.utils.data
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from src.data import load_dataset
-from src.model.models import model_loader
-from src.model.loss_functions import loss_loader
 
+from src.data import load_dataset
 from src.visualization import visualize
+from src.model.models import model_loader
+from src.model.metrics.metrics import Metrics
+from src.data.labels import updated_class_dict
+from src.model.loss_functions import loss_loader
+from src.model.metrics import Metrics, Metric, iou
 
 
 def train_step(
     model: torch.nn.Module,
     loss_fn: torch.nn.Module,
+    metrics_fn: Metrics,
     optimizer: torch.optim,
     train_dataset: torch.utils.data.DataLoader,
     epoch: int,
@@ -29,19 +36,25 @@ def train_step(
         train_dataset (torch.utils.data.DataLoader): training set.
         epoch (int): current epoch. Ex. 40 out of 100
     """
+
     train_loss = 0
     for images, masks in tqdm(train_dataset, desc=f"Epoch {epoch}"):
         model.train()
 
+        # (batch size, channels, height, width)
         images = images.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
 
         # Model Prediction
+        # (batch size, channels, height, width)
         pred_logits = model(images)
 
         # Loss Calculation
         loss = loss_fn(pred_logits, masks)
-        train_loss += loss
+        train_loss += loss.item()
+
+        # Metric(s) Calculation
+        metrics_fn.calculate_metrics(masks, pred_logits)
 
         # Optimizer
         optimizer.zero_grad()
@@ -49,13 +62,18 @@ def train_step(
         optimizer.step()
 
     train_loss /= len(train_dataset)
-
     print(f"train loss: {train_loss}")
+
+    print(iou_metric.score["traffic light"])
+
+    metrics = metrics_fn.get_metrics()
+    print(json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": ")))
 
 
 def validation_step(
     model: torch.nn.Module,
     loss_fn: torch.nn.Module,
+    metrics_fn: Metrics,
     validation_dataset: torch.utils.data.DataLoader,
     epoch: int,
     device: str,
@@ -72,16 +90,24 @@ def validation_step(
             pred_logits = model(images)
 
             # Loss Calculation
-            val_loss += loss_fn(pred_logits, masks)
+            loss = loss_fn(pred_logits, masks)
+            val_loss += loss.item()
+
+            # Metric(s) Calculation
+            metrics_fn.calculate_metrics(masks, pred_logits)
 
         val_loss /= len(validation_dataset)
 
     print(f"validation loss: {val_loss}")
 
+    metrics = metrics_fn.get_metrics()
+    print(json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": ")))
+
 
 def train(
     model_name: str,
     loss_name: str,
+    metrics_fn: Callable,
     batch_size: int,
     data_dim: int,
     learning_rate: float,
@@ -114,6 +140,7 @@ def train(
         train_step(
             model=model,
             loss_fn=loss_fn,
+            metrics_fn=metrics_fn,
             optimizer=optimizer,
             train_dataset=train_dataset,
             epoch=epoch,
@@ -123,12 +150,15 @@ def train(
         validation_step(
             model=model,
             loss_fn=loss_fn,
+            metrics_fn=metrics_fn,
             validation_dataset=valid_dataset,
             epoch=epoch,
             device=device,
         )
 
     sample_batch_img, sample_batch_mask = next(iter(valid_dataset))
+
+    # (1, channels, data_dim, data_dim)
     sample_img = sample_batch_img[0].unsqueeze(0)
     sample_mask = sample_batch_mask[0].unsqueeze(0)
 
@@ -141,8 +171,8 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     RANDOM_SEED = 0
     LEARNING_RATE = 1e-3
-    BATCH_SIZE = 4
-    DATA_DIM = 112
+    BATCH_SIZE = 1
+    DATA_DIM = 512
     EPOCHS = 1
 
     print(
@@ -157,9 +187,13 @@ if __name__ == "__main__":
     """
     )
 
+    iou_metric = Metric(name="iou", metric_fn=iou)
+    metrics_solver = Metrics(updated_class_dict, device, iou_metric)
+
     train(
         model_name="unet",
         loss_name="dice",
+        metrics_fn=metrics_solver,
         batch_size=BATCH_SIZE,
         data_dim=DATA_DIM,
         learning_rate=LEARNING_RATE,

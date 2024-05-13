@@ -24,8 +24,6 @@ def _fix_dim(device: str, *args) -> tuple[torch.Tensor, ...]:
 
             processed_arg = arg.squeeze(0).permute(1, 2, 0)
 
-            print(processed_arg.shape)
-
             processed_list.append(processed_arg)
 
     return tuple(processed_list)
