@@ -4,6 +4,7 @@ opencv-python==4.9.0.80
 torch==2.3.0
 torchvision==0.18.0
 torchmetrics==1.4.0
+torchinfo==1.8.0
 
 albumentations==1.4.6
 
