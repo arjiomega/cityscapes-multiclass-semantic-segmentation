@@ -1,8 +1,9 @@
+--extra-index-url https://download.pytorch.org/whl/cu118
 matplotlib==3.8.4
 scikit-image==0.23.2
 opencv-python==4.9.0.80
-torch==2.3.0
-torchvision==0.18.0
+torch[cu118]==2.3.0
+torchvision[cu118]==0.18.0
 torchmetrics==1.4.0
 torchinfo==1.8.0
 
