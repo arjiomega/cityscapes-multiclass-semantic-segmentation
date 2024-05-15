@@ -147,34 +147,18 @@ def validation_step(
     print(json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": ")))
 
 
-def experiment_tracking(
-    *_training_steps: Callable, track_model: torch.nn.Module
-) -> Callable:
-    def _experiment_tracking(*args, **kwargs):
+def track_experiment(tracking_uri, experiment_name):
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment(experiment_name)
 
-        with mlflow.start_run():
-            params = {
-                "epochs": EPOCHS,
-                "learning_rate": LEARNING_RATE,
-                "batch_size": BATCH_SIZE,
-                "loss_function": "dice loss",
-                "metric_function": "iou",
-                "optimizer": "adam",
-            }
+    def _track_experiment(train_fn):
+        def wrapper(*args, **kwargs):
+            with mlflow.start_run():
+                train_fn()
 
-            for step in _training_steps:
-                step(track_step=True, *args, **kwargs)
+        return wrapper
 
-            # Log training hyperparameters
-            mlflow.log_params(params)
-
-            with open("model_summary.txt", "w") as f:
-                f.write(str(summary(track_model, verbose=0)))
-            mlflow.log_artifact("model_summary.txt")
-
-            mlflow.pytorch.log_model(track_model, "model")
-
-    return _experiment_tracking
+    return _track_experiment
 
 
 def train(
@@ -186,6 +170,9 @@ def train(
     learning_rate: float,
     epochs: int,
     device: str,
+    tracking_uri: str,
+    experiment_name: str,
+    run_name: str,
 ):
     NUM_CLASSES = 8
 
@@ -209,21 +196,51 @@ def train(
 
     optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
-    experiment_tracker = experiment_tracking(
-        train_step, validation_step, track_model=model
-    )
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment(experiment_name)
 
-    for epoch in range(epochs):
-        experiment_tracker(
-            model=model,
-            loss_fn=loss_fn,
-            metrics_fn=metrics_fn,
-            optimizer=optimizer,
-            train_dataset=train_dataset,
-            validation_dataset=validation_dataset,
-            epoch=epoch,
-            device=device,
-        )
+    with mlflow.start_run(run_name=run_name):
+        params = {
+            "epochs": epochs,
+            "learning_rate": learning_rate,
+            "batch_size": batch_size,
+            "loss_function": loss_name,
+            "model": model_name,
+            "metric_function": ["iou"],
+            "optimizer": "adam",
+        }
+
+        # Log training hyperparameters
+        mlflow.log_params(params)
+
+        with open("model_summary.txt", "w") as f:
+            NO_PRINT = 0
+            f.write(str(summary(model, verbose=NO_PRINT)))
+            mlflow.log_artifact("model_summary.txt")
+
+        for epoch in range(epochs):
+            train_step(
+                model=model,
+                loss_fn=loss_fn,
+                metrics_fn=metrics_fn,
+                optimizer=optimizer,
+                train_dataset=train_dataset,
+                epoch=epoch,
+                device=device,
+                track_step=True,
+            )
+
+            validation_step(
+                model=model,
+                loss_fn=loss_fn,
+                metrics_fn=metrics_fn,
+                validation_dataset=validation_dataset,
+                epoch=epoch,
+                device=device,
+                track_step=True,
+            )
+
+        mlflow.pytorch.log_model(model, "model")
 
     # VISUALIZATION
     sample_batch_img, sample_batch_mask = next(iter(validation_dataset))
@@ -242,7 +259,7 @@ if __name__ == "__main__":
     RANDOM_SEED = 0
     LEARNING_RATE = 1e-3
     BATCH_SIZE = 4
-    DATA_DIM = 480
+    DATA_DIM = 112
     EPOCHS = 5
 
     import os
@@ -268,6 +285,9 @@ if __name__ == "__main__":
         URI: {URI}
         """
     else:
+        URI = None
+        USERNAME = None
+        PASSWORD = None
         TRACKING = "DISABLED"
 
     print(
@@ -284,6 +304,17 @@ if __name__ == "__main__":
     """
     )
 
+    if TRACKING == "DISABLED":
+        user_input = input(
+            "Continue training without tracking? [y/n] Currently models trained are not saved."
+        )
+        if user_input == "y":
+            pass
+        elif user_input == "n":
+            exit()
+        else:
+            print("Wrong input. Exiting...")
+
     iou_metric = Metric(name="iou", metric_fn=iou)
     metrics_solver = Metrics(updated_class_dict, device, iou_metric)
 
@@ -296,4 +327,7 @@ if __name__ == "__main__":
         learning_rate=LEARNING_RATE,
         epochs=EPOCHS,
         device=device,
+        tracking_uri=URI,
+        experiment_name="cityscapes",
+        run_name="test run 1",
     )
