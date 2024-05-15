@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Literal
 
 import cv2
 import torch
@@ -172,7 +173,7 @@ class LoadDataset(Dataset):
 
 
 def load_dataset(
-    dataset_group: str,
+    dataset_group: Literal["train", "valid", "test"],
     batch_size: int,
     n_classes: int,
     transform,

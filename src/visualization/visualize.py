@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import torch
 import matplotlib.figure
 import matplotlib.pyplot as plt
+
+from config import config
 
 
 def _fix_dim(device: str, *args) -> tuple[torch.Tensor, ...]:
@@ -30,7 +34,12 @@ def _fix_dim(device: str, *args) -> tuple[torch.Tensor, ...]:
 
 
 def from_prediction(
-    model: torch.nn.Module, image: torch.Tensor, true_mask: torch.Tensor, device: str
+    model: torch.nn.Module,
+    image: torch.Tensor,
+    true_mask: torch.Tensor,
+    device: str,
+    save_as: str,
+    save_dir: str,
 ) -> matplotlib.figure.Figure:
     """_summary_
 
@@ -58,4 +67,4 @@ def from_prediction(
         arr[1].imshow(true_mask)
         arr[2].imshow(predict.to("cpu"))
 
-        fig.savefig("full_figure.png")
+        fig.savefig(Path(config.REPORTS_DIR, save_dir, f"{save_as}.png"))

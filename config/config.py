@@ -26,6 +26,7 @@ from pathlib import Path
 CONFIG_DIR = Path(__file__).parent.resolve()
 PROJECT_DIR = CONFIG_DIR.parent
 DATA_DIR = Path(PROJECT_DIR, "data")
+REPORTS_DIR = Path(PROJECT_DIR, "reports")
 
 RAW_DATA_DIR = Path(DATA_DIR, "raw")
 PROCESSED_DATA_DIR = Path(DATA_DIR, "processed")

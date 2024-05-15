@@ -1,3 +1,4 @@
+import math
 import torch
 from torchmetrics import JaccardIndex
 
@@ -54,18 +55,12 @@ def iou(
         true_mask_by_class = true_mask[:, class_idx, ...]
         predict_mask_by_class = predict_mask[:, class_idx, ...]
 
-        # print(f"TRUE uniques for class {class_name} {torch.unique(true_mask_by_class)}")
-        # print(f"PREDICT uniques for class {class_name} {torch.unique(predict_mask_by_class)}")
+        iou = iou_fn(predict_mask_by_class, true_mask_by_class).item()
 
-        iou_by_class[class_name] = iou_fn(
-            predict_mask_by_class, true_mask_by_class
-        ).item()
-
-        # print(f"iou: {iou_by_class[class_name]:3f} | type {type(iou_by_class[class_name])}")
-        # print("-------------------------")
-
-        sum_IoU += iou_by_class[class_name]
-
-    # x = input("One batch ended for IOU, continue?\n\n")
+        if math.isnan(iou):
+            iou_by_class[class_name] = 0.0
+        else:
+            iou_by_class[class_name] = iou
+            sum_IoU += iou
 
     return {"byclass": iou_by_class, "mean": sum_IoU / C}
