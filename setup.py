@@ -20,7 +20,7 @@ def install_torch(package: str, version: str = ''):
 
 setup(
     name="src",
-    python_requires=">3.11.0",
+    python_requires=">=3.11.0",
     packages=find_packages(),
     version="1.0.0",
     install_requires = [
@@ -36,7 +36,7 @@ setup(
         "albumentations==1.4.6",
         "pydantic==2.7.1",
         "tqdm==4.66.4",
-        "mlflow==2.12.1", 
+        "mlflow==2.12.1",
     ],
     extras_require={
         "dev": [
