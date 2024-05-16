@@ -10,7 +10,7 @@ class Metric:
         self.metric_fn = metric_fn
         self.score = defaultdict(list)
         self.mean_score = []
-
+    # TODO DO NOT APPEND IF CLASS SCORE IS 0.0
     def update_metric(self, true_mask, predict_mask, classmap, device):
         _metric = self.metric_fn(true_mask, predict_mask, classmap, device)
 
