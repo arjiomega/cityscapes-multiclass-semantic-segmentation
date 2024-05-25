@@ -1,16 +1,35 @@
 import json
-from pathlib import Path
 from typing import Literal
 
-import mlflow
 import torch
 from tqdm import tqdm
 
-from src.model.metrics.metrics import Metrics
 from src.visualization import visualize
+from src.model.metrics.metrics import Metrics
 
 
 class Step:
+    """
+    A class to perform training or validation steps for a given model.
+
+    Attributes:
+        step_mode (Literal["train", "validation"]): Mode of the step, either 'train' or 'validation'.
+        device (Literal["cuda", "cpu"]): Device to run the model on.
+        model (torch.nn.Module): The model to be trained or validated.
+        dataset (torch.utils.data.DataLoader): DataLoader for the dataset.
+        metrics_fn (Metrics): Metrics calculation function.
+        loss_fn (torch.nn.Module): Loss function for training or validation.
+        optimizer (torch.optim.Optimizer): Optimizer for training.
+        view_step_info (bool): Whether to print step info.
+        reports_dir (str): Directory to save reports.
+        step_loss (float): Accumulated loss for the current step.
+        metrics (dict): Calculated metrics for the current step.
+
+    Methods:
+        step(epoch, **run_extra_fns): Perform a training or validation step for the given epoch.
+        _run_loop(epoch): Run the main loop for training or validation.
+    """
+
     def __init__(
         self,
         step_mode: Literal["train", "validation"],
@@ -20,10 +39,24 @@ class Step:
         metrics_fn: Metrics,
         loss_fn: torch.nn.Module = None,
         optimizer: torch.optim = None,
-        track_experiment: bool = False,
         reports_dir: str = None,
         view_step_info: bool = False,
     ) -> None:
+        """
+        Initialize the Step class.
+
+        Args:
+            step_mode (Literal["train", "validation"]): Mode of the step, either 'train' or 'validation'.
+            device (Literal["cuda", "cpu"]): Device to run the model on.
+            model (torch.nn.Module): The model to be trained or validated.
+            dataset (torch.utils.data.DataLoader): DataLoader for the dataset.
+            metrics_fn (Metrics): Metrics calculation function.
+            loss_fn (torch.nn.Module, optional): Loss function for training or validation. Defaults to None.
+            optimizer (torch.optim.Optimizer, optional): Optimizer for training. Defaults to None.
+            reports_dir (str, optional): Directory to save reports. Defaults to None.
+            view_step_info (bool, optional): Whether to print step info. Defaults to False.
+        """
+
         self.step_mode = step_mode
         self.model = model
         self.dataset = dataset
@@ -32,12 +65,22 @@ class Step:
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.view_step_info = view_step_info
-        self.track_experiment = track_experiment
         self.reports_dir = reports_dir
         self.step_loss = 0.0
         self.metrics = None
 
-    def step(self, epoch):
+    def step(self, epoch, **run_extra_fns):
+        """
+        Perform a training or validation step for the given epoch.
+
+        Args:
+            epoch (int): The current epoch number.
+            **run_extra_fns: Additional functions to run during the step, e.g., logging functions.
+
+        Raises:
+            ValueError: If step_mode is neither 'train' nor 'validation'.
+        """
+
         if self.step_mode == "train":
             self.model.train()
         elif self.step_mode == "validation":
@@ -80,10 +123,19 @@ class Step:
                 json.dumps(self.metrics, sort_keys=True, indent=4)
             )  # separators=(",", ": ")
 
-        if self.track_experiment:
-            self._log_metrics(epoch)
+        if "step_logger" in run_extra_fns:
+            run_extra_fns["step_logger"](
+                epoch, self.step_mode, self.step_loss, self.metrics, self.model
+            )
 
     def _run_loop(self, epoch):
+        """
+        Run the main loop for training or validation.
+
+        Args:
+            epoch (int): The current epoch number.
+        """
+
         for images, masks in tqdm(
             self.dataset, desc=f"{self.step_mode} step: Epoch {epoch}"
         ):
@@ -109,25 +161,6 @@ class Step:
                 loss.backward()
                 self.optimizer.step()
 
-    def _log_metrics(self, epoch):
-        mlflow.log_metric(f"{self.step_mode}_loss", f"{self.step_loss:3f}", step=epoch)
-
-        for metric_name, metric_dict in self.metrics.items():
-            for score_type, score in metric_dict.items():
-                if score_type == "mean":
-                    mlflow.log_metric(
-                        key=f"{self.step_mode}_{metric_name}_{score_type}",
-                        value=f"{score:3f}",
-                        step=epoch,
-                    )
-                else:
-                    for class_name, class_score in score.items():
-                        mlflow.log_metric(
-                            key=f"{self.step_mode}_{metric_name}_{score_type}_{class_name}",
-                            value=f"{class_score:3f}",
-                            step=epoch,
-                        )
-
 
 def step_initializer(
     device: Literal["cuda", "cpu"],
@@ -137,17 +170,32 @@ def step_initializer(
     metrics_fn: Metrics,
     loss_fn: torch.nn.Module = None,
     optimizer: torch.optim = None,
-    track_experiment: bool = False,
     view_step_info: bool = False,
     reports_dir: str = None,
 ) -> tuple[Step, Step]:
+    """
+    Initialize the training and validation steps.
+
+    Args:
+        device (Literal["cuda", "cpu"]): Device to run the model on.
+        model (torch.nn.Module): The model to be trained or validated.
+        train_dataset (torch.utils.data.DataLoader): DataLoader for the training dataset.
+        validation_dataset (torch.utils.data.DataLoader): DataLoader for the validation dataset.
+        metrics_fn (Metrics): Metrics calculation function.
+        loss_fn (torch.nn.Module, optional): Loss function for training or validation. Defaults to None.
+        optimizer (torch.optim.Optimizer, optional): Optimizer for training. Defaults to None.
+        view_step_info (bool, optional): Whether to print step info. Defaults to False.
+        reports_dir (str, optional): Directory to save reports. Defaults to None.
+
+    Returns:
+        tuple[Step, Step]: A tuple containing the training and validation steps.
+    """
 
     setup_ = {
         "device": device,
         "model": model,
         "metrics_fn": metrics_fn,
         "loss_fn": loss_fn,
-        "track_experiment": track_experiment,
         "view_step_info": view_step_info,
         "reports_dir": reports_dir,
     }
@@ -158,7 +206,3 @@ def step_initializer(
     validation_step = Step(step_mode="validation", dataset=validation_dataset, **setup_)
 
     return train_step, validation_step
-
-
-if __name__ == "__main__":
-    train_step = TrainStep()
