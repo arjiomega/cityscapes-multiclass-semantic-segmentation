@@ -2,6 +2,12 @@
 data/raw/*
 data/processed
 
+# Training output
+reports/
+
+# VSCode
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

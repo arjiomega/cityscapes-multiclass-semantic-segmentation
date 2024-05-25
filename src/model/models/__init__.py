@@ -1,8 +1,10 @@
+import torch
+
 from .unet import UNET
 
 # For testing purposes only
 _list_of_models = [UNET]
 
 
-def model_loader(model_name: str):
+def model_loader(model_name: str) -> torch.nn.Module:
     return {"unet": UNET}[model_name]
