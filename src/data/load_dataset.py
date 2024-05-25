@@ -105,7 +105,7 @@ class LoadDataset(Dataset):
     def __init__(
         self,
         dataset_group: str,
-        n_classes: int,
+        num_classes: int,
         transform=None,
         dataset_img_dir: Path = None,
         dataset_mask_dir: Path = None,
@@ -114,7 +114,7 @@ class LoadDataset(Dataset):
 
         Args:
             dataset_group (str): "train", "valid", or "test"
-            n_classes (int): Number of classes in the mask.
+            num_classes (int): Number of classes in the mask.
             transform : Tranformation function that is going to be used for the data.
             Defaults to None.
             dataset_img_dir (Path, optional): directory containing images for a certain
@@ -148,7 +148,7 @@ class LoadDataset(Dataset):
             for path in os.listdir(img_path)
         ]
 
-        self.n_classes = n_classes
+        self.num_classes = num_classes
 
         self.transform = transform
 
@@ -167,7 +167,9 @@ class LoadDataset(Dataset):
             image = torch.from_numpy(image).float()
             mask = torch.from_numpy(mask).long()
 
-        onehot_mask = torch.nn.functional.one_hot(mask, self.n_classes).permute(2, 0, 1)
+        onehot_mask = torch.nn.functional.one_hot(mask, self.num_classes).permute(
+            2, 0, 1
+        )
 
         return image, onehot_mask
 
@@ -175,7 +177,7 @@ class LoadDataset(Dataset):
 def load_dataset(
     dataset_group: Literal["train", "valid", "test"],
     batch_size: int,
-    n_classes: int,
+    num_classes: int,
     transform,
     num_workers: int = 4,
     *args,
@@ -186,7 +188,7 @@ def load_dataset(
                                     must be 'train', 'valid', 'test'"
     assert dataset_group in ["train", "valid", "test"], failed_dataset_group_response
 
-    dataset = LoadDataset(dataset_group, transform=transform, n_classes=n_classes)
+    dataset = LoadDataset(dataset_group, transform=transform, num_classes=num_classes)
     dataloader = DataLoader(
         dataset, batch_size, shuffle=True, num_workers=num_workers, pin_memory=True
     )
