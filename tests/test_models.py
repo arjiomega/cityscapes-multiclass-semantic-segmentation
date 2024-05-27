@@ -12,7 +12,7 @@ def dim_expectations() -> tuple[tuple, tuple]:
     INPUT_CHANNELS = 3
     HEIGHT, WIDTH = 112, 112
 
-    OUTPUT_CHANNELS = 2
+    OUTPUT_CHANNELS = 3
 
     INPUT_SHAPE = (BATCH_SIZE, INPUT_CHANNELS, HEIGHT, WIDTH)
     OUTPUT_SHAPE = (BATCH_SIZE, OUTPUT_CHANNELS, HEIGHT, WIDTH)
@@ -36,7 +36,9 @@ def test_models_io_shape(dim_expectations, model):
     # (batch size, channels (rgb), height, width)
     x = torch.randn(INPUT_SHAPE, device=device)
 
-    load_model = model(in_channels=3, out_channels=2).to(device)
+    load_model = model(in_channels=INPUT_SHAPE[1], out_channels=OUTPUT_SHAPE[1]).to(
+        device
+    )
     predict = load_model(x)
 
     failed_test_output = f"model: {model} failed io shape test."
@@ -55,7 +57,9 @@ def test_models_output_not_softmax(dim_expectations, model):
     # (batch size, channels (rgb), height, width)
     x = torch.randn(INPUT_SHAPE, device=device)
 
-    load_model = model(in_channels=3, out_channels=2).to(device)
+    load_model = model(in_channels=INPUT_SHAPE[1], out_channels=OUTPUT_SHAPE[1]).to(
+        device
+    )
 
     # (channels (rgb), height, width)
     predict = load_model(x).squeeze(0)
