@@ -13,3 +13,8 @@ https://www.cityscapes-dataset.com
 - **seq** the sequence number using 6 digits.
 - **frame** the frame number using 6 digits. Note that in some cities very few, albeit very long sequences were recorded, while in some cities - many short sequences were recorded, of which only the 19th frame is annotated.
 - **ext** the extension of the file and optionally a suffix, e.g. _polygons.json for ground truth files
+
+## Models
+
+Vgg16-Unet
+![Vgg16-unet](https://i.imgur.com/qjMPeVL.png)
