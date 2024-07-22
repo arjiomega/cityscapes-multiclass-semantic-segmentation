@@ -1,6 +1,7 @@
 import os
 import json
 from pathlib import Path
+from dotenv import load_dotenv
 
 import torch
 import torch.utils
@@ -97,11 +98,12 @@ class TrainInitializer:
 
 
 if __name__ == "__main__":
+    load_dotenv()
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     with open(Path(config.CONFIG_DIR, "train_args.json")) as json_file:
         _data = json.load(json_file)
-        print(type(_data))
         train_args = TrainArgs(**_data, device=device)
 
     print(
