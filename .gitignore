@@ -1,6 +1,7 @@
 # Local data
 data/raw/*
 data/processed
+notebooks/*.ipynb
 
 # Training output
 reports/
