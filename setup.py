@@ -38,8 +38,10 @@ setup(
         "albumentations==1.4.6",
         "pydantic==2.7.1",
         "tqdm==4.66.4",
-        "python-dotenv==1.0.1"
+        "python-dotenv==1.0.1",
         "mlflow==2.12.1",
+        "fastapi==0.111.1",
+        "PyQt6==6.7.1",
     ],
     extras_require={
         "dev": [

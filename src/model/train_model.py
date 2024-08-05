@@ -99,7 +99,7 @@ class TrainInitializer:
 
 if __name__ == "__main__":
     load_dotenv()
-    
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     with open(Path(config.CONFIG_DIR, "train_args.json")) as json_file:

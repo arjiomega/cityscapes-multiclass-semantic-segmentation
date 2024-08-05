@@ -18,3 +18,26 @@ https://www.cityscapes-dataset.com
 
 Vgg16-Unet
 ![Vgg16-unet](https://i.imgur.com/qjMPeVL.png)
+
+## Setup
+
+### API
+```bash
+uvicorn src.api.model_api:app --log-level debug --reload 
+```
+
+### Label Studio
+```bash
+sudo docker run -it -p 8080:8080 -v ./labelstudio_data:/label-studio/data --env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true --env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/data/images --env DATA_UPLOAD_MAX_NUMBER_FILES=1000 heartexlabs/label-studio:latest
+```
+
+<br>
+
+If ever an error occur when running `docker run` related to permissions
+```bash
+sudo chown 1001:1001 ./labelstudio_data
+```
+
+Setup Segment Anything Model for Easier Labeling
+>https://labelstud.io/blog/get-started-using-segment-anything/
+

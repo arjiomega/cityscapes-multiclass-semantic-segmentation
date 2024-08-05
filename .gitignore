@@ -1,7 +1,16 @@
-# Local data
-data/raw/*
-data/processed
+# Local directory
 notebooks/*.ipynb
+mlruns/
+labelstudio_data/
+
+
+data/*
+!data/processed/.gitkeep
+!data/raw/.gitkeep
+!data/source/.gitkeep
+
+model_store/*
+!model_store/.gitkeep
 
 # Training output
 reports/

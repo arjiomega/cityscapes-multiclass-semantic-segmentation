@@ -27,9 +27,11 @@ CONFIG_DIR = Path(__file__).parent.resolve()
 PROJECT_DIR = CONFIG_DIR.parent
 DATA_DIR = Path(PROJECT_DIR, "data")
 REPORTS_DIR = Path(PROJECT_DIR, "reports")
+MODELS_DIR = Path(PROJECT_DIR, "model_store")
 
 RAW_DATA_DIR = Path(DATA_DIR, "raw")
 PROCESSED_DATA_DIR = Path(DATA_DIR, "processed")
+SOURCE_DATA_DIR = Path(DATA_DIR, "source")
 
 RAW_IMG_DIR = Path(RAW_DATA_DIR, "leftImg8bit_trainvaltest", "leftImg8bit")
 RAW_MASK_DIR = Path(RAW_DATA_DIR, "gtFine_trainvaltest", "gtFine")
