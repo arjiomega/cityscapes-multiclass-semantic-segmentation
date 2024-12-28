@@ -21,6 +21,22 @@ Vgg16-Unet
 
 ## Setup
 
+### Environment Variables 
+1. (Optional) Create an `.env` file containing your `MLFLOW_TRACKING_URI`, `MLFLOW_TRACKING_USERNAME`, `MLFLOW_TRACKING_PASSWORD`.
+2. Adjust `config/train_args.json` according to your needs.
+
+### Data
+1. place `gtFine_trainvaltest` and `leftImg8bit_trainvaltest` to `data/raw` directory
+2. update `leftImg8bit_trainvaltest/val`  to `leftImg8bit_trainvaltest/valid`
+3. update `gtFine_trainvaltest/gtFine/val` to `gtFine_trainvaltest/gtFine/valid`
+
+### Dependencies
+```bash
+pip install -e ".[dev]"
+# OR
+pip install -e .
+```
+
 ### API
 ```bash
 uvicorn src.api.model_api:app --log-level debug --reload 
