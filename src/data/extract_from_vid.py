@@ -8,7 +8,7 @@ from config import config
 
 logging.basicConfig(level=logging.DEBUG)
 
-source_name = "manila_to_lucena"
+source_name = "manila_to_baguio"
 vid_format = ".mp4"
 filename = source_name + vid_format
 data_path = Path(config.SOURCE_DATA_DIR, filename)

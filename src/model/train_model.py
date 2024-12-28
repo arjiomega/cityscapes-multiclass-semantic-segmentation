@@ -91,6 +91,8 @@ class TrainInitializer:
             train_step, validation_step, epochs=self.train_args.epochs
         )
 
+        torch.save(self.model, "model.pt")
+
         if track_experiment:
             self.track.track_run(train_loop_fn, self.train_args, self.model)
         else:
@@ -185,13 +187,15 @@ if __name__ == "__main__":
             print("Wrong input. Exiting...")
             exit()
 
+    # Data transformation base on docs
+    # https://pytorch.org/vision/stable/models/generated/torchvision.models.vgg16.html#torchvision.models.VGG16_Weights
+    # WHY? Here's why https://stats.stackexchange.com/questions/502603/why-does-normalizing-image-twice-work
     data_transform = A.Compose(
         [
             A.Resize(height=train_args.data_dim, width=train_args.data_dim),
             A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
             ),
             ToTensorV2(),
         ],

@@ -11,7 +11,7 @@ from src.data.load_dataset import Data
 from src.data.update_mask import update_mask
 from src.data.data_utils import extract_data_name
 
-logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.DEBUG)
 
 
 def _cities_similarity_rule(img_dataset_path: Path, mask_dataset_path: Path) -> None:
@@ -33,8 +33,24 @@ def _filename_similarity_rule(img_city_path: Path, mask_city_path: Path) -> None
     assert filename_similarity_rule, "images and masks filenames must be the same"
 
 
+def _update_dir_name() -> None:
+
+    if os.path.exists(Path(config.RAW_IMG_DIR, "val")):
+        # update val to valid dir
+        img_val_dir = str(Path(config.RAW_IMG_DIR, "val"))
+        updated_img_val_dir = str(Path(config.RAW_IMG_DIR, "valid"))
+        os.rename(img_val_dir, updated_img_val_dir)
+    if os.path.exists(Path(config.RAW_MASK_DIR, "val")):
+        # update val to valid dir
+        mask_val_dir = str(Path(config.RAW_MASK_DIR, "val"))
+        updated_mask_val_dir = str(Path(config.RAW_MASK_DIR, "valid"))
+        os.rename(mask_val_dir, updated_mask_val_dir)
+
+
 if __name__ == "__main__":
     dataset_names = ["train", "valid", "test"]
+
+    _update_dir_name()
 
     for dataset in dataset_names:
         img_dataset_path = Path(config.RAW_IMG_DIR, dataset)

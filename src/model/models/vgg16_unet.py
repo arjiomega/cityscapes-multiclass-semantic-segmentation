@@ -41,6 +41,7 @@ class VGG16UNET(nn.Module):
                     output_channels,
                     kernel_size=2,
                     stride=2,
+                    bias=False
                 )
             )
             self.encoder.append(DoubleConv(input_channels, output_channels))
@@ -55,6 +56,7 @@ class VGG16UNET(nn.Module):
                 output_channels,
                 kernel_size=2,
                 stride=2,
+                bias=False
             ),
         )
 
@@ -63,7 +65,8 @@ class VGG16UNET(nn.Module):
 
         self.encoder.insert(index=3, module=DoubleConv(input_channels, output_channels))
 
-        self.final_conv = nn.Conv2d(64, out_channels, kernel_size=1)
+        self.final_conv = nn.Conv2d(64, out_channels, kernel_size=1, bias=False)
+        self.bn_final_conv = nn.BatchNorm2d(out_channels)
 
     def _encoder_block(self, x):
         skip_connections = []
@@ -109,5 +112,7 @@ class VGG16UNET(nn.Module):
         skip_connections, x = self._encoder_block(x)
         x = self.bottleneck(x)
         x = self._decoder_block(skip_connections, x)
+        x = self.final_conv(x)
+        x = self.bn_final_conv(x)
 
-        return self.final_conv(x)
+        return x

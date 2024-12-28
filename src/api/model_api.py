@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
         app (FastAPI): The FastAPI application instance.
     """
 
-    inference = Inference.from_mlflow("test")
+    inference = Inference.from_local_model("08152024")
     api_dict["inference"] = inference
     yield
     api_dict.clear()
