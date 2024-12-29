@@ -90,12 +90,12 @@ class ModelTrainer:
                 self.run_loop(valid_loader, eval_mode=True)
   
             if self.notifier and self.reporter:
-                reporter.plot_loss_history(
+                self.reporter.plot_loss_history(
                     self.train_history["loss"], 
                     self.valid_history["loss"],
                     filepath="loss_history.png"
                 )
-                reporter.plot_metric_history(
+                self.reporter.plot_metric_history(
                     self.train_history["mIOU"],
                     self.valid_history["mIOU"],
                     filepath="metric_history.png"
