@@ -138,7 +138,7 @@ class ModelTrainer:
             pred_probs = torch.softmax(logits_normalized, dim=1)
 
             # loss calculation
-            loss_ = self.loss(pred_probs, masks.float(), reduction='mean')
+            loss_ = self.loss(pred_probs, masks.float())#, reduction='mean')
             epoch_loss += loss_.item()
 
             # metric(s) calculation
