@@ -167,14 +167,15 @@ class ModelTrainer:
 
         return epoch_loss, mIOU
     
-    def save(self, save_path):
+    def save(self, save_path, n_classes):
         save_path = save_path if save_path.endswith(".pth") else f"{save_path}.pth"
         torch.save({
             "epochs": self.epoch_counter,
             "model_state_dict": self.model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
             "train_history": self.train_history,
-            "valid_history": self.valid_history
+            "valid_history": self.valid_history,
+            "n_classes": n_classes
         }, save_path)
 
 if __name__ == "__main__":
@@ -236,3 +237,4 @@ if __name__ == "__main__":
     )
     model_trainer.train(batch_train, batch_valid, epochs=epochs)
     
+    model_trainer.save("model", n_classes=len(updated_class_dict))
