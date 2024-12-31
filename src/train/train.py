@@ -4,7 +4,6 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from torchvision.ops import sigmoid_focal_loss
-from src.train.metrics import IoU
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -35,7 +34,9 @@ class ModelTrainer:
     def __init__(
             self, 
             model, 
-            iou: IoU, 
+            metric_fn, 
+            loss_fn, 
+            optimizer,
             class_dict: dict[str, list[str]],
             device: torch.device = torch.device("cpu"),
         ):
@@ -44,10 +45,10 @@ class ModelTrainer:
         self.reporter = None # plots, etc.
 
         # model, loss, optimizer, metric
-        self.iou = iou
+        self.metric_fn = metric_fn
         self.model = model
-        self.loss = sigmoid_focal_loss
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+        self.loss = loss_fn
+        self.optimizer = optimizer
 
         self.epoch_counter = 0
         
@@ -139,7 +140,7 @@ class ModelTrainer:
             epoch_loss += loss_.item()
 
             # metric(s) calculation
-            self.iou(pred_probs, masks)
+            self.metric_fn(pred_probs, masks)
 
             if not eval_mode:
                 # Backpropagation
@@ -149,7 +150,7 @@ class ModelTrainer:
 
         epoch_loss /= len(dataloader)
 
-        mIOU, class_IOU = self.iou.get_scores()
+        mIOU, class_IOU = self.metric_fn.get_scores()
 
         logger.info(f"{'Validation' if eval_mode else 'Training'} - Loss: {epoch_loss:.4f}, mIOU: {mIOU:.4f}")
 
