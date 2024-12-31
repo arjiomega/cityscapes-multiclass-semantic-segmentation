@@ -4,16 +4,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from torchvision.ops import sigmoid_focal_loss
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-from config import config
-from src.experiment_tracking.training_notifier import TrainingNotifier
 from src.train.metrics import IoU
-from src.models.VGG16UNET import VGG16UNET
-from src.data.mask_updater import MaskUpdater
-from src.data.load_dataset import LoadDataset, SubsetLoader
-from src.report.report import Report
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -46,13 +37,12 @@ class ModelTrainer:
             model, 
             iou: IoU, 
             class_dict: dict[str, list[str]],
-            notifier = None,
             reporter = None,
             device: torch.device = torch.device("cpu"),
         ):
         self.device = device
-        self.notifier = notifier # discord webhook
-        self.reporter = reporter # plots, etc.
+        self.notifier = None # discord webhook
+        self.reporter = None # plots, etc.
 
         # model, loss, optimizer, metric
         self.iou = iou
@@ -73,6 +63,16 @@ class ModelTrainer:
             "class_IOU": {class_name: [] for class_name in class_dict.keys()}
         }
      
+    def add_notifier(self, notifier):
+        """Used for discord webhook"""
+        self.notifier = notifier
+        return self
+
+    def add_reporter(self, reporter):
+        """Used for plots, etc."""
+        self.reporter = reporter
+        pass
+
     def train(self, train_loader, valid_loader, epochs):
 
         if self.notifier:
@@ -124,8 +124,6 @@ class ModelTrainer:
             
             self.epoch_counter += 1
 
-
-
     def run_loop(self, dataloader: DataLoader, eval_mode=False):
         epoch_loss = 0.0
 
@@ -138,7 +136,7 @@ class ModelTrainer:
             pred_probs = torch.softmax(logits_normalized, dim=1)
 
             # loss calculation
-            loss_ = self.loss(pred_probs, masks.float())#, reduction='mean')
+            loss_ = self.loss(pred_probs, masks.argmax(dim=1))
             epoch_loss += loss_.item()
 
             # metric(s) calculation
@@ -177,64 +175,3 @@ class ModelTrainer:
             "valid_history": self.valid_history,
             "n_classes": n_classes
         }, save_path)
-
-if __name__ == "__main__":
-    updated_class_dict = {
-        "unlabeled": ["unlabeled", "ego vehicle", "rectification border", "out of roi", "static", "dynamic", "ground"],
-        "road": ["road", "parking", "rail track"],
-        "vehicles": ["car", "motorcycle", "bus", "truck", "train", "caravan", "trailer"],
-        "bike": ["bicycle"],
-        "person": ["person"],
-        "rider": ["rider"],
-        "sky": ["sky"],
-        "vegetation": ["vegetation", "terrain"],
-        "objects": ["traffic light", "traffic sign", "pole", "polegroup"],
-        "walls": ["building", "wall", "fence", "guard rail", "bridge", "tunnel"],
-        "sidewalk": ["sidewalk"],
-        "license plate": ["license plate"],
-    }
-
-    webhook_url = input("Enter the Discord Webhook URL: ")
-    avatar_url = "https://media.tenor.com/2fDPAEGo1vAAAAAM/alfred-marko.gif"
-
-    notifier = TrainingNotifier(webhook_url, avatar_url=avatar_url)
-    reporter = Report(show_plots=False)
-
-    epochs = 5
-    data_dim = 50
-    batch_size = 8
-    mean = (0.485, 0.456, 0.406)
-    std = (0.229, 0.224, 0.225)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    # Data Transformation
-    mask_updater = MaskUpdater(updated_class_dict)
-    data_transform = A.Compose(
-        [
-            A.Resize(height=data_dim, width=data_dim),
-            A.Normalize(mean=mean, std=std),
-            ToTensorV2(),
-        ]
-    )
-
-    # Load Data
-    subset_loader = SubsetLoader(config.RAW_IMG_DIR, config.RAW_MASK_DIR)
-    train_dataset = LoadDataset("train", subset_loader, mask_updater, transform=data_transform)
-    valid_dataset = LoadDataset("valid", subset_loader, mask_updater, transform=data_transform)
-    batch_train = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=4)
-    batch_valid = DataLoader(valid_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
-
-    model = VGG16UNET(len(updated_class_dict)).to(device)
-    iou_metric = IoU(n_classes=len(updated_class_dict), device=device)
-
-    model_trainer = ModelTrainer(
-        model=model, 
-        iou=iou_metric, 
-        class_dict=updated_class_dict, 
-        device=device,
-        notifier=notifier,
-        reporter=reporter
-    )
-    model_trainer.train(batch_train, batch_valid, epochs=epochs)
-    
-    model_trainer.save("model", n_classes=len(updated_class_dict))
