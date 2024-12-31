@@ -33,6 +33,7 @@ setup(
         "opencv-python==4.9.0.80",
         install_torch("torch", "2.3.0"),
         install_torch("torchvision", "0.18.0"),
+        "segmentation-models-pytorch",
         "torchmetrics==1.4.0",
         "torchinfo==1.8.0",
         "albumentations==1.4.6",
