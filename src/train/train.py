@@ -37,7 +37,6 @@ class ModelTrainer:
             model, 
             iou: IoU, 
             class_dict: dict[str, list[str]],
-            reporter = None,
             device: torch.device = torch.device("cpu"),
         ):
         self.device = device
