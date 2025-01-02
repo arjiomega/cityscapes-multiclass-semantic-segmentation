@@ -1,12 +1,10 @@
 from typing import Literal
 
-import torch
 import numpy as np
 from PIL import Image
-import albumentations as A
 from torch.utils.data import Dataset
-from albumentations.pytorch import ToTensorV2
 
+from src.data.data_transformer import DataTransformer
 from src.data.utils import CityLoader
 
 # Subset -> Train, Valid, Test
@@ -29,39 +27,22 @@ class LoadDataset(Dataset):
     def __init__(self, 
                  dataset: Literal["train", "valid", "test"], 
                  subset_loader: SubsetLoader, 
-                 mask_updater,
+                 data_transformer: DataTransformer,
                  randomize=True, 
-                 transform=None
         ):
         self.dataset = subset_loader[dataset].get_img_mask_pairs(randomize=randomize)
-        self.transform = transform if transform is not None else self._transform()
-        self.mask_updater = mask_updater
-        self.num_classes = self.mask_updater.num_classes
+        self.data_transformer = data_transformer
+   
 
     def __getitem__(self, idx):
         img, mask = self.dataset[idx]
         img = np.array(Image.open(img).convert("RGB"))
         mask = np.array(Image.open(mask).convert("L"))
 
-        augmented = self.transform(image=img, mask=mask)
-        img, mask = augmented["image"].float(), augmented["mask"].long()
+        transformed_data = self.data_transformer(img, mask)
+        transformed_img, transformed_mask = transformed_data["image"], transformed_data["mask"]
 
-        mask = self.mask_updater(mask)
-
-        # exclude the ignore class        
-        mask = torch.nn.functional.one_hot(mask, self.num_classes).permute(2, 0, 1)
-
-        return img, mask
+        return transformed_img, transformed_mask
 
     def __len__(self):
         return len(self.dataset)
-
-    def _transform(self):
-        transform = A.Compose(
-            [
-                A.Resize(height=512, width=512),
-                A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-                ToTensorV2(),
-            ]
-        )
-        return transform
