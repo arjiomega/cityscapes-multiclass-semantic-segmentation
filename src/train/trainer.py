@@ -195,7 +195,7 @@ class ModelTrainer:
                 }
             )
 
-    def save(self, save_path: str):
+    def save(self, save_path: str, training_config: dict):
         """Save the model and training state."""
         save_path = save_path if save_path.endswith(".pth") else f"{save_path}.pth"
         torch.save({
@@ -204,5 +204,6 @@ class ModelTrainer:
             "optimizer_state_dict": self.optimizer.state_dict(),
             "train_history": self.train_history,
             "valid_history": self.valid_history,
-            "n_classes": len(self.class_dict)
+            "n_classes": len(self.class_dict),
+            "training_config": training_config
         }, save_path)

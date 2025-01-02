@@ -54,7 +54,7 @@ def main(config_path: str|Path, savepath: str):
         model_trainer.add_reporter(reporter)
 
     model_trainer.train(batch_train, batch_valid, epochs)
-    model_trainer.save(savepath)
+    model_trainer.save(training_config.run_name, training_config.config)
 
 if __name__ == "__main__":
     savepath = 'changeme.pth'
