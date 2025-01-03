@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-def main(config_path: str|Path, savepath: str):
+def main(config_path: str|Path):
     training_config = ConfigLoader(config_path)
 
     epochs = training_config.epochs
@@ -42,21 +42,21 @@ def main(config_path: str|Path, savepath: str):
     batch_train = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=4)
     batch_valid = DataLoader(valid_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
-    model_trainer.train(batch_train, batch_valid, epochs)
-
     webhook_url = os.getenv("WEBHOOK_URL", None)
     avatar_url = os.getenv("AVATAR_URL", None)
     
     if webhook_url and avatar_url:
+        logger.info("Webhook URL and Avatar URL found. Adding Notifier and Reporter.")
         notifier = TrainingNotifier(webhook_url, avatar_url=avatar_url)
         reporter = Report(show_plots=False)
         model_trainer.add_notifier(notifier)
         model_trainer.add_reporter(reporter)
+    else:
+        logger.info("Webhook URL and Avatar URL not found. Not adding Notifier and Reporter.")
 
     model_trainer.train(batch_train, batch_valid, epochs)
     model_trainer.save(training_config.run_name, training_config.config)
 
 if __name__ == "__main__":
-    savepath = 'changeme.pth'
     config_path = Path(config.CONFIG_DIR, "train_args.json")
-    main(config_path, savepath)
+    main(config_path)
