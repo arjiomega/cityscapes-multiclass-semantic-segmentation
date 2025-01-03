@@ -39,7 +39,7 @@ class ModelLoader:
     @classmethod
     def from_config(cls, config_path=Path(config.CONFIG_DIR, "train_args.json"), config: ConfigLoader = None):
       
-        config = config if config else ConfigLoader(config_path)
+        config = config if config else ConfigLoader.from_path(config_path)
 
         return cls.from_segmentation_models(
             architecture_name=config.architecture,

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 def main(config_path: str|Path):
-    training_config = ConfigLoader(config_path)
+    training_config = ConfigLoader.from_path(config_path)
 
     epochs = training_config.epochs
     batch_size = training_config.batch_size

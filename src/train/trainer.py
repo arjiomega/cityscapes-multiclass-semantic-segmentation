@@ -62,7 +62,7 @@ class ModelTrainer:
         continue_from_checkpoint: str = None
         ):
         
-        config = config if config else ConfigLoader(config_path)
+        config = config if config else ConfigLoader.from_path(config_path)
 
         if config.metric_function != "IoU":
             raise ValueError(f"Metric function {config.metric_function} is not available. Try 'IoU' or setup ModelTrainer manually.")
