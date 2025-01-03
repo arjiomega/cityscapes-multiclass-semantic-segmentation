@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -10,9 +11,16 @@ class TrainingNotifier:
         self.username = username
         self.avatar_url = avatar_url
 
-    def send_start_notification(self, epochs):
+    def send_start_notification(self, epochs, training_config: dict = None):
         message = f"Training started for {epochs} epochs."
         self.webhook.send_message(content=message)
+
+        if training_config:
+            formatted_string = json.dumps(training_config, indent=4)
+            border = "=" * 40
+            training_config_str = f"{border}\nTRAINING CONFIGURATION\n{border}\n{formatted_string}"
+
+            self.webhook.send_message(content=training_config_str)
 
     def send_epoch_notification(
             self, 
