@@ -22,8 +22,11 @@ class ModelTrainer:
             loss_fn, 
             optimizer,
             class_dict: dict[str, list[str]],
+            training_config: ConfigLoader = None,
             device: torch.device = torch.device("cpu"),
         ):
+        self.training_config = training_config
+
         self.class_dict = class_dict
         self.device = device
         self.notifier = None # discord webhook
@@ -47,6 +50,8 @@ class ModelTrainer:
             "mIOU": [] , 
             "class_IOU": {class_name: [] for class_name in class_dict.keys()}
         }
+
+        self.best_mIOU = 0.0 # valid mIOU
      
     @classmethod
     def from_config(
@@ -79,12 +84,15 @@ class ModelTrainer:
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
+        logger.info(f"Model Trainer created from config. Backup per epoch available.")
+
         return cls(
             model=model,
             metric_fn=metric_fn,
             loss_fn=loss,
             optimizer=optimizer,
             class_dict=class_dict,
+            training_config=config,
             device=device
         )
 
@@ -101,7 +109,10 @@ class ModelTrainer:
     def train(self, train_loader, valid_loader, epochs):
 
         if self.notifier:
-            self.notifier.send_start_notification(epochs)
+            self.notifier.send_start_notification(
+                epochs, 
+                training_config=self.training_config.config if self.training_config else None
+            )
 
         logger.info(f"Starting training for {epochs} epochs")
         for epoch in range(epochs):
@@ -113,10 +124,20 @@ class ModelTrainer:
             self.model.eval()
             with torch.inference_mode():
                 self.run_epoch(valid_loader, eval_mode=True)
-  
+                self.save_best_model()
+
             self.report_and_notify()
             
             self.epoch_counter += 1
+
+    def save_best_model(self):
+        if self.training_config is None:
+            logger.warning("No training config found. Skipping model save.")
+            return
+        if self.valid_history["mIOU"][-1] > self.best_mIOU:
+            self.best_mIOU = self.valid_history["mIOU"][-1]
+            self.save(f"best_model_{self.training_config.run_name}", self.training_config.config)
+            logger.info(f"Best model saved with mIOU: {self.best_mIOU:.4f} | Epoch {self.epoch_counter}")
 
     def run_epoch(self, dataloader: DataLoader, eval_mode=False):
         epoch_loss = 0.0
@@ -207,3 +228,5 @@ class ModelTrainer:
             "n_classes": len(self.class_dict),
             "training_config": training_config
         }, save_path)
+
+        logger.info(f"Model saved to {save_path}.")
