@@ -111,7 +111,7 @@ class ModelTrainer:
         if self.notifier:
             self.notifier.send_start_notification(
                 epochs, 
-                training_config=self.training_config.config if self.training_config else None
+                training_config=self.training_config.to_dict() if self.training_config else None
             )
 
         logger.info(f"Starting training for {epochs} epochs")
@@ -136,7 +136,7 @@ class ModelTrainer:
             return
         if self.valid_history["mIOU"][-1] > self.best_mIOU:
             self.best_mIOU = self.valid_history["mIOU"][-1]
-            self.save(f"best_model_{self.training_config.run_name}", self.training_config.config)
+            self.save(f"best_model_{self.training_config.run_name}", self.training_config.to_dict())
             logger.info(f"Best model saved with mIOU: {self.best_mIOU:.4f} | Epoch {self.epoch_counter}")
 
     def run_epoch(self, dataloader: DataLoader, eval_mode=False):

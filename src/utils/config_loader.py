@@ -115,6 +115,24 @@ class ConfigLoader:
             config.get("run_name", None)
         )
 
+    def to_dict(self):
+        return {
+            "architecture": self.architecture,
+            "encoder_family": self.encoder_family,
+            "encoder_name": self.encoder_name,
+            "weights_name": self.weights_name,
+            "loss_function": self.loss_function,
+            "metric_function": self.metric_function,
+            "optimizer": self.optimizer,
+            "epochs": self.epochs,
+            "learning_rate": self.learning_rate,
+            "batch_size": self.batch_size,
+            "data_dim": self.data_dim,
+            "random_seed": self.random_seed,
+            "class_map": self.class_map,
+            "experiment_name": self.experiment_name,
+            "run_name": self.run_name,
+        }
 
 if __name__ == "__main__":
     config_path = "/home/rjomega-linux/projects/cityscapes-multiclass-semantic-segmentation/config/train_args.json"
