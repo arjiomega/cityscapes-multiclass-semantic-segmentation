@@ -9,10 +9,10 @@ from src.data.utils import CityLoader
 
 # Subset -> Train, Valid, Test
 class SubsetLoader:
-    def __init__(self, image_path, mask_path):
+    def __init__(self, image_path, mask_path, include_test=False):
         self.train = CityLoader("train", image_path, mask_path)
         self.valid = CityLoader("valid", image_path, mask_path)
-        self.test = CityLoader("test", image_path, mask_path)
+        self.test = CityLoader("test", image_path, mask_path) if include_test else None
     def __getitem__(self, subset: Literal["train", "valid", "test"]) -> CityLoader:
         if subset == "train":
             return self.train
