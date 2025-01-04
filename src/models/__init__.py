@@ -13,6 +13,13 @@ architectures = {
 }
 
 encoders = {
+    "resnet": {
+        "resnet18": {"weights": ["imagenet"]},
+        "resnet34": {"weights": ["imagenet"]},
+        "resnet50": {"weights": ["imagenet"]},
+        "resnet101": {"weights": ["imagenet"]},
+        "resnet152": {"weights": ["imagenet"]},
+    },
     "efficientnet": {
         "efficientnet-b0": {"weights": ["imagenet"]},
         "efficientnet-b1": {"weights": ["imagenet"]},

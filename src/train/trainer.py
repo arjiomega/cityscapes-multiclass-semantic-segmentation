@@ -66,8 +66,8 @@ class ModelTrainer:
 
         if config.metric_function != "IoU":
             raise ValueError(f"Metric function {config.metric_function} is not available. Try 'IoU' or setup ModelTrainer manually.")
-        if config.loss_function != "focal_loss":
-            raise ValueError(f"Loss function {config.loss_function} is not available. Try 'focal_loss' or setup ModelTrainer manually.")
+        if config.loss_function != "dice_loss":
+            raise ValueError(f"Loss function {config.loss_function} is not available. Try 'dice_loss' or setup ModelTrainer manually.")
         if config.optimizer != "Adam":
             raise ValueError(f"Optimizer {config.optimizer} is not available. Try 'Adam' or setup ModelTrainer manually.")
         
@@ -76,7 +76,7 @@ class ModelTrainer:
         model = ModelLoader.from_config(config=config).load_model().to(device)
 
         metric_fn = IoU(n_classes=len(class_dict), device=device)
-        loss = smp.losses.FocalLoss(mode="multiclass")
+        loss = smp.losses.DiceLoss(mode="multiclass")
         optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
         if continue_from_checkpoint:
@@ -152,7 +152,7 @@ class ModelTrainer:
             pred_probs = torch.softmax(logits_normalized, dim=1)
 
             # loss calculation
-            loss_ = self.loss(pred_probs, masks.argmax(dim=1))
+            loss_ = self.loss(pred_logits, masks.argmax(dim=1))
             epoch_loss += loss_.item()
 
             # metric(s) calculation
