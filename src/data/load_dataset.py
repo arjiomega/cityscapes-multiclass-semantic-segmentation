@@ -39,6 +39,10 @@ class LoadDataset(Dataset):
         img = np.array(Image.open(img).convert("RGB"))
         mask = np.array(Image.open(mask).convert("L"))
 
+        # remove ego driver
+        img = img[:760, :, :]
+        mask = mask[:760, :]
+
         transformed_data = self.data_transformer(img, mask)
         transformed_img, transformed_mask = transformed_data["image"], transformed_data["mask"]
 
