@@ -22,6 +22,7 @@ class ModelTrainer:
             loss_fn, 
             optimizer,
             class_dict: dict[str, list[str]],
+            scheduler = None,
             training_config: ConfigLoader = None,
             device: torch.device = torch.device("cpu"),
         ):
@@ -37,6 +38,7 @@ class ModelTrainer:
         self.model = model.to(self.device)
         self.loss = loss_fn
         self.optimizer = optimizer
+        self.scheduler = scheduler
 
         self.epoch_counter = 0
         
@@ -79,6 +81,8 @@ class ModelTrainer:
         loss = smp.losses.DiceLoss(mode="multiclass")
         optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", factor=0.5, patience=5, verbose=True)
+
         if continue_from_checkpoint:
             checkpoint = torch.load(continue_from_checkpoint, map_location=device)
             model.load_state_dict(checkpoint['model_state_dict'])
@@ -91,6 +95,7 @@ class ModelTrainer:
             metric_fn=metric_fn,
             loss_fn=loss,
             optimizer=optimizer,
+            scheduler=scheduler,
             class_dict=class_dict,
             training_config=config,
             device=device
@@ -167,6 +172,9 @@ class ModelTrainer:
         epoch_loss /= len(dataloader)
 
         mIOU, class_IOU = self.metric_fn.get_scores()
+
+        if self.scheduler:
+            self.scheduler.step(mIOU)
 
         logger.info(f"{'Validation' if eval_mode else 'Training'} - Loss: {epoch_loss:.4f}, mIOU: {mIOU:.4f}")
 
