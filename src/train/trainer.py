@@ -24,6 +24,9 @@ class ModelTrainer:
             class_dict: dict[str, list[str]],
             scheduler = None,
             training_config: ConfigLoader = None,
+            epoch_counter: int = 0,
+            train_history: dict = None,
+            valid_history: dict = None,
             device: torch.device = torch.device("cpu"),
         ):
         self.training_config = training_config
@@ -40,18 +43,18 @@ class ModelTrainer:
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-        self.epoch_counter = 0
+        self.epoch_counter = epoch_counter
         
         self.train_history = {
             "loss": [], 
             "mIOU": [] , 
             "class_IOU": {class_name: [] for class_name in class_dict.keys()}
-        }
+        } if train_history is None else train_history
         self.valid_history = {
             "loss": [], 
             "mIOU": [] , 
             "class_IOU": {class_name: [] for class_name in class_dict.keys()}
-        }
+        } if valid_history is None else valid_history
 
         self.best_mIOU = 0.0 # valid mIOU
      
@@ -87,6 +90,7 @@ class ModelTrainer:
             checkpoint = torch.load(continue_from_checkpoint, map_location=device)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
 
         logger.info(f"Model Trainer created from config. Backup per epoch available.")
 
@@ -98,7 +102,10 @@ class ModelTrainer:
             scheduler=scheduler,
             class_dict=class_dict,
             training_config=config,
-            device=device
+            device=device,
+            epoch_counter=checkpoint['epochs'] if continue_from_checkpoint else 0,
+            train_history=checkpoint['train_history'] if continue_from_checkpoint else None,
+            valid_history=checkpoint['valid_history'] if continue_from_checkpoint else None
         )
 
     def add_notifier(self, notifier):
@@ -231,6 +238,7 @@ class ModelTrainer:
             "epochs": self.epoch_counter,
             "model_state_dict": self.model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict() if self.scheduler else None,
             "train_history": self.train_history,
             "valid_history": self.valid_history,
             "n_classes": len(self.class_dict),
